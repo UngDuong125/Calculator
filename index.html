@@ -20,7 +20,6 @@
           <button class="muted" data-action="mplus">M+</button>
           <button class="muted" data-action="mminus">M−</button>
           <button class="muted" data-action="ms">MS</button>
-          <button class="muted" data-action="mtoggle" title="Hiện bộ nhớ">M</button>
     </div>
     <div class="pad">
 
@@ -216,7 +215,6 @@
           case 'mplus': memory += val; break
           case 'mminus': memory -= val; break
           case 'ms': memory = val; break
-          case 'mtoggle': alert('Giá trị bộ nhớ: ' + memory)
         }
         updateMemoryPanel()
       }
@@ -258,7 +256,7 @@
             case 'backspace': backspace(); break
             case 'history': historyPanel.style.display = 
                 historyPanel.style.display === 'none' ? 'block' : 'none'; break
-            case 'mc': case 'mr': case 'mplus': case 'mminus': case 'ms': case 'mtoggle':
+            case 'mc': case 'mr': case 'mplus': case 'mminus': case 'ms':
               memoryAction(action); break
           }
         })
