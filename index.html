@@ -3,312 +3,205 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Calculator — Online</title>
+  <title>Calculator – Online</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button class="panel-toggle" id="panelToggle">☰</button>
   <div class="container">
     <div class="calculator" role="application" aria-label="Máy tính">
       <div class="display" aria-live="polite">
         <div class="small" id="prevDisplay">&nbsp;</div>
         <div class="big" id="currDisplay">0</div>
       </div>
-    <div class="memory-row">
-          <button class="muted" data-action="mc">MC</button>
-          <button class="muted" data-action="mr">MR</button>
-          <button class="muted" data-action="mplus">M+</button>
-          <button class="muted" data-action="mminus">M−</button>
-          <button class="muted" data-action="ms">MS</button>
-    </div>
-    <div class="pad">
 
-      <button class="muted" data-action="percent">%</button>
-      <button class="muted" data-action="clear-entry" title="CE">CE</button>
-      <button class="muted" data-action="clear-all" title="C">C</button>
-      <button class="muted" data-action="backspace" title="Backspace">←</button>
-      
-      <button class="muted" data-action="inverse">1/x</button>
-      <button class="muted" data-action="square">x²</button>
-      <button class="muted" data-action="sqrt">√x</button>
-      <button class="op" data-action="divide">/</button>
+      <div class="pad">
+        <button class="muted" data-action="percent">%</button>
+        <button class="muted" data-action="clear-entry" title="CE">CE</button>
+        <button class="muted" data-action="clear-all" title="C">C</button>
+        <button class="muted" data-action="backspace" title="Backspace">←</button>
+        
+        <button class="muted" data-action="negate">±</button>
+        <button class="muted" data-action="square">x²</button>
+        <button class="muted" data-action="sqrt">√x</button>
+        <button class="op" data-action="divide">/</button>
 
-      <button data-num="7">7</button>
-      <button data-num="8">8</button>
-      <button data-num="9">9</button>      
-      <button class="op" data-action="multiply">*</button>
+        <button data-num="7">7</button>
+        <button data-num="8">8</button>
+        <button data-num="9">9</button>      
+        <button class="op" data-action="multiply">*</button>
 
-      <button data-num="4">4</button>
-      <button data-num="5">5</button>
-      <button data-num="6">6</button>
-      <button class="op" data-action="subtract">-</button>
+        <button data-num="4">4</button>
+        <button data-num="5">5</button>
+        <button data-num="6">6</button>
+        <button class="op" data-action="subtract">-</button>
 
-      <button data-num="1">1</button>
-      <button data-num="2">2</button>
-      <button data-num="3">3</button>
-      <button class="op" data-action="add">+</button>
+        <button data-num="1">1</button>
+        <button data-num="2">2</button>
+        <button data-num="3">3</button>
+        <button class="op" data-action="add">+</button>
 
-      <button class="span2" data-num="0">0</button>
-      <button class="dot" data-action="dot">.</button>
-      <button class="eq" data-action="equals">=</button>
-
-    </div>
-
-    <div class="kbd-hint">Bàn phím: số, + - * /, Enter =, Backspace ←, % .</div>
-  </div>
-  <div class="side-panel" id="sidePanel">
-    <div class="panel-tabs">
-      <button id="tabHistory" class="active">Lịch sử</button>
-      <button id="tabMemory">Bộ nhớ</button>
-    </div>
-    <div class="panel-content" id="historyTab">
-      <div class="panel-header">
-        <h3>Lịch sử</h3>
-        <button class="clear-history-btn" id="clearHistory">Xóa</button>
+        <button class="span2" data-num="0">0</button>
+        <button class="dot" data-action="dot">.</button>
+        <button class="eq" data-action="equals">=</button>
       </div>
-      <div id="historyList"></div>
-    </div>
-    <div class="panel-content hidden" id="memoryTab">
-      <h3>Bộ nhớ</h3>
-      <div id="memoryList"></div>
-      <div class="memory-value">Giá trị hiện tại: <span id="memoryValue">0</span></div>
-    </div>
-  </div>  
-<script src="script.js"></script>
-</body>
 
+      <div class="kbd-hint">Bàn phím: số, + - * /, Enter =, Backspace ←, % .</div>
+    </div>
+  </div>
 
   <script>
-    (function(){
-      const prevDisplay = document.getElementById('prevDisplay')
-      const currDisplay = document.getElementById('currDisplay')
-      const historyPanel = document.getElementById('historyPanel')
-      const historyList = document.getElementById('historyList')      
+    // Thêm code JavaScript của bạn vào đây
+    // Ví dụ cơ bản:
+    
+    let curr = '0';
+    let prev = '';
+    let op = '';
+    let freshStart = true;
 
-      let curr = '0'
-      let prev = ''
-      let op = null
-      let justEvaluated = false
-      let memory = 0
-      let history = []
+    const prevDisplay = document.getElementById('prevDisplay');
+    const currDisplay = document.getElementById('currDisplay');
 
-      function refresh(){
-        currDisplay.textContent = curr
-        prevDisplay.textContent = prev ? (prev + (op?(' ' + op):'')) : ''
+    function updateDisplay() {
+      currDisplay.textContent = curr;
+      prevDisplay.textContent = prev || '\u00A0';
+    }
+
+    function handleNumber(num) {
+      if (freshStart) {
+        curr = num;
+        freshStart = false;
+      } else {
+        curr = curr === '0' ? num : curr + num;
+      }
+      updateDisplay();
+    }
+
+    function handleOperator(newOp) {
+      if (op && !freshStart) {
+        calculate();
+      }
+      op = newOp;
+      prev = curr + ' ' + newOp;
+      freshStart = true;
+      updateDisplay();
+    }
+
+    function calculate() {
+      const a = parseFloat(prev);
+      const b = parseFloat(curr);
+      let result = 0;
+
+      switch (op) {
+        case '+': result = a + b; break;
+        case '-': result = a - b; break;
+        case '*': result = a * b; break;
+        case '/': result = b !== 0 ? a / b : 'Error'; break;
       }
 
-      function inputDigit(d){
-        if(justEvaluated){ curr = '0'; justEvaluated=false }
-        if(curr === '0' && d !== '.') curr = d
-        else if(d === '.' && curr.includes('.')) return
-        else curr += d
-        refresh()
-      }
+      curr = result.toString();
+      prev = '';
+      op = '';
+      freshStart = true;
+      updateDisplay();
+    }
 
-      function setOperator(nextOp){
-        if(op && !justEvaluated){ compute() }
-        prev = curr
-        curr = '0'
-        op = nextOp
-        justEvaluated = false
-        refresh()
-      }
+    document.querySelector('.pad').addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
 
-      function compute(){
-        if(!op || prev === '') return
-        const a = parseFloat(prev)
-        const b = parseFloat(curr)
-        let result = 0
-        switch(op){
-          case '+': result = a + b; break
-          case '-': result = a - b; break
-          case '*': result = a * b; break
-          case '/': result = b === 0 ? NaN : a / b; break
+      const num = btn.dataset.num;
+      const action = btn.dataset.action;
+
+      if (num !== undefined) {
+        handleNumber(num);
+      } else if (action) {
+        switch (action) {
+          case 'add':
+          case 'subtract':
+          case 'multiply':
+          case 'divide':
+            handleOperator(btn.textContent);
+            break;
+          case 'equals':
+            if (op) calculate();
+            break;
+          case 'clear-all':
+            curr = '0';
+            prev = '';
+            op = '';
+            freshStart = true;
+            updateDisplay();
+            break;
+          case 'clear-entry':
+            curr = '0';
+            freshStart = true;
+            updateDisplay();
+            break;
+          case 'backspace':
+            if (curr.length > 1) {
+              curr = curr.slice(0, -1);
+            } else {
+              curr = '0';
+            }
+            updateDisplay();
+            break;
+          case 'dot':
+            if (!curr.includes('.')) {
+              curr += '.';
+              updateDisplay();
+            }
+            break;
+          case 'negate':
+            curr = (parseFloat(curr) * -1).toString();
+            updateDisplay();
+            break;
+          case 'square':
+            curr = (parseFloat(curr) ** 2).toString();
+            updateDisplay();
+            break;
+          case 'sqrt':
+            curr = Math.sqrt(parseFloat(curr)).toString();
+            updateDisplay();
+            break;
+          case 'percent':
+            curr = (parseFloat(curr) / 100).toString();
+            updateDisplay();
+            break;
         }
-        const expr = `${a} ${op} ${b} = ${result}`
-        addToHistory(expr)
-        curr = String(Number.isFinite(result) ? +result.toPrecision(15) : 'Error')
-        prev = ''
-        op = null
-        justEvaluated = true
-        refresh()
       }
+    });
 
-      function percent(){
-        // If there's a previous value and an operator, treat as: a op (a * b/100)
-        let x = parseFloat(curr)
-        if(prev && op){
-          let a = parseFloat(prev)
-          x = (a * x) / 100
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') {
+        handleNumber(e.key);
+      } else if (e.key === '+') {
+        handleOperator('+');
+      } else if (e.key === '-') {
+        handleOperator('-');
+      } else if (e.key === '*') {
+        handleOperator('*');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        handleOperator('/');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        if (op) calculate();
+      } else if (e.key === 'Backspace') {
+        if (curr.length > 1) {
+          curr = curr.slice(0, -1);
         } else {
-          x = x / 100
+          curr = '0';
         }
-        curr = String(+x.toPrecision(15))
-        refresh()
-      }
-
-      function sqrt(){
-        let x = parseFloat(curr)
-        if(x < 0){ curr='Error'; refresh(); return }
-        curr = String(+Math.sqrt(x).toPrecision(15))
-        justEvaluated = true
-        refresh()
-      }
-
-      function square(){
-        let x = parseFloat(curr)
-        curr = String(+(x*x).toPrecision(15))
-        justEvaluated = true
-        refresh()
-      }
-
-      function inverse(){
-        let x = parseFloat(curr)
-        if(x === 0){ curr='Error'; refresh(); return }
-        curr = String(+(1/x).toPrecision(15))
-        justEvaluated = true
-        refresh()
-      }
-
-      function clearEntry(){ curr = '0'; refresh() }
-      function clearAll(){ curr='0'; prev=''; op=null; refresh() }
-      function backspace(){
-        if(justEvaluated){ curr='0'; justEvaluated=false; refresh(); return }
-        if(curr.length <= 1){ curr='0' } else { curr = curr.slice(0,-1) }
-        refresh()
-      }
-
-      function addToHistory(expr){
-        history.unshift(expr)
-        const div = document.createElement('div')
-        div.className = 'history-item'
-        div.textContent = expr
-        historyList.prepend(div)
-      }
-
-      function clearHistory() {
-        history = []
-        historyList.innerHTML = ''
-      }
-
-      // MEMORY
-      const tabHistory = document.getElementById('tabHistory')
-      const tabMemory = document.getElementById('tabMemory')
-      const historyTab = document.getElementById('historyTab')
-      const memoryTab = document.getElementById('memoryTab')
-      const memoryValue = document.getElementById('memoryValue')
-      const memoryList = document.getElementById('memoryList')
-
-      function updateMemoryPanel() {
-        memoryValue.textContent = memory
-        const div = document.createElement('div')
-        div.className = 'memory-item'
-        div.textContent = `Đã lưu: ${memory}`
-        memoryList.prepend(div)
-      }
-
-      function memoryAction(action){
-        const val = parseFloat(curr)
-        switch(action){
-          case 'mc': memory = 0; memoryList.innerHTML = ''; break
-          case 'mr': curr = String(memory); refresh(); break
-          case 'mplus': memory += val; break
-          case 'mminus': memory -= val; break
-          case 'ms': memory = val; break
+        updateDisplay();
+      } else if (e.key === '.') {
+        if (!curr.includes('.')) {
+          curr += '.';
+          updateDisplay();
         }
-        updateMemoryPanel()
+      } else if (e.key === '%') {
+        curr = (parseFloat(curr) / 100).toString();
+        updateDisplay();
       }
-
-      // Panel switching
-      tabHistory.addEventListener('click', () => {
-        tabHistory.classList.add('active')
-        tabMemory.classList.remove('active')
-        historyTab.classList.remove('hidden')
-        memoryTab.classList.add('hidden')
-      })
-
-      tabMemory.addEventListener('click', () => {
-        tabMemory.classList.add('active')
-        tabHistory.classList.remove('active')
-        memoryTab.classList.remove('hidden')
-        historyTab.classList.add('hidden')
-      })
-
-      // button handling
-      document.querySelectorAll('button').forEach(b=>{
-        b.addEventListener('click', ()=>{
-          const num = b.getAttribute('data-num')
-          const action = b.getAttribute('data-action')
-          if(num != null) { inputDigit(num); return }
-          switch(action){
-            case 'dot': inputDigit('.'); break
-            case 'add': setOperator('+'); break
-            case 'subtract': setOperator('-'); break
-            case 'multiply': setOperator('*'); break
-            case 'divide': setOperator('/'); break
-            case 'equals': compute(); break
-            case 'percent': percent(); break
-            case 'sqrt': sqrt(); break
-            case 'square':square(); break
-            case 'inverse': inverse(); break
-            case 'clear-entry': clearEntry(); break
-            case 'clear-all': clearAll(); break
-            case 'backspace': backspace(); break
-            case 'history': historyPanel.style.display = 
-                historyPanel.style.display === 'none' ? 'block' : 'none'; break
-            case 'mc': case 'mr': case 'mplus': case 'mminus': case 'ms':
-              memoryAction(action); break
-          }
-        })
-      })
-
-      // keyboard support
-      window.addEventListener('keydown', (e)=>{
-        if(e.key >= '0' && e.key <= '9'){ e.preventDefault(); inputDigit(e.key); return }
-        if(e.key === '.') { e.preventDefault(); inputDigit('.'); return }
-        if(e.key === 'Enter' || e.key === '='){ e.preventDefault(); compute(); return }
-        if(e.key === 'Backspace'){ e.preventDefault(); backspace(); return }
-        if(e.key === 'Delete'){ e.preventDefault(); clearEntry(); return }
-        if(e.key === '%'){ e.preventDefault(); percent(); return }
-        if(e.key === 's' || e.key === 'S'){ e.preventDefault(); sqrt(); return }
-        if(e.key === 'n' || e.key === 'N'){ e.preventDefault(); negate(); return }
-        if(['+','-','*','/'].includes(e.key)){
-          e.preventDefault();
-          if(e.key === '+') setOperator('+')
-          if(e.key === '-') setOperator('-')
-          if(e.key === '*') setOperator('*')
-          if(e.key === '/') setOperator('/')
-        }
-      })
-
-      // initialize
-      refresh()
-
-      // Toggle panel cho mobile
-      const panelToggle = document.getElementById('panelToggle')
-      const sidePanel = document.getElementById('sidePanel')
-      const clearHistoryBtn = document.getElementById('clearHistory')
-      
-      panelToggle.addEventListener('click', () => {
-        sidePanel.classList.toggle('show')
-        panelToggle.classList.toggle('hidden')
-      })
-
-      clearHistoryBtn.addEventListener('click', () => {
-        clearHistory()
-      })
-
-      // Đóng panel khi click bên ngoài (mobile)
-      document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768 && 
-            !sidePanel.contains(e.target) && 
-            !panelToggle.contains(e.target) &&
-            sidePanel.classList.contains('show')) {
-          sidePanel.classList.remove('show')
-          panelToggle.classList.remove('hidden')
-        }
-      })
-    })();
+    });
   </script>
 </body>
 </html>
