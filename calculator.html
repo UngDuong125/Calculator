@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calculator — Offline</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="calculator" role="application" aria-label="Máy tính">
+      <div class="display" aria-live="polite">
+        <div class="small" id="prevDisplay">&nbsp;</div>
+        <div class="big" id="currDisplay">0</div>
+      </div>
+    <div class="memory-row">
+          <button class="muted" data-action="mc">MC</button>
+          <button class="muted" data-action="mr">MR</button>
+          <button class="muted" data-action="mplus">M+</button>
+          <button class="muted" data-action="mminus">M−</button>
+          <button class="muted" data-action="ms">MS</button>
+          <button class="muted" data-action="mtoggle" title="Hiện bộ nhớ">M</button>
+    </div>
+    <div class="pad">
+
+      <button class="muted" data-action="percent">%</button>
+      <button class="muted" data-action="clear-entry" title="CE">CE</button>
+      <button class="muted" data-action="clear-all" title="C">C</button>
+      <button class="muted" data-action="backspace" title="Backspace">←</button>
+      
+      <button class="muted" data-action="inverse">1/x</button>
+      <button class="muted" data-action="square">x²</button>
+      <button class="muted" data-action="sqrt">√x</button>
+      <button class="op" data-action="divide">÷</button>
+
+      <button data-num="7">7</button>
+      <button data-num="8">8</button>
+      <button data-num="9">9</button>      
+      <button class="op" data-action="multiply">×</button>
+
+      <button data-num="4">4</button>
+      <button data-num="5">5</button>
+      <button data-num="6">6</button>
+      <button class="op" data-action="subtract">−</button>
+
+      <button data-num="1">1</button>
+      <button data-num="2">2</button>
+      <button data-num="3">3</button>
+      <button class="op" data-action="add">+</button>
+
+      <button class="span2" data-num="0">0</button>
+      <button class="dot" data-action="dot">.</button>
+      <button class="eq" data-action="equals">=</button>
+
+    </div>
+
+    <div class="kbd-hint">Bàn phím: số, + - * /, Enter =, Backspace ←, % .</div>
+  </div>
+  <div class="side-panel" id="sidePanel">
+    <div class="panel-tabs">
+      <button id="tabHistory" class="active">Lịch sử</button>
+      <button id="tabMemory">Bộ nhớ</button>
+    </div>
+    <div class="panel-content" id="historyTab">
+      <h3>Lịch sử</h3>
+      <div id="historyList"></div>
+    </div>
+    <div class="panel-content hidden" id="memoryTab">
+      <h3>Bộ nhớ</h3>
+      <div id="memoryList"></div>
+      <div class="memory-value">Giá trị hiện tại: <span id="memoryValue">0</span></div>
+    </div>
+  </div>  
+<script src="script.js"></script>
+</body>
+
+
+  <script>
+    (function(){
+      const prevDisplay = document.getElementById('prevDisplay')
+      const currDisplay = document.getElementById('currDisplay')
+      const historyPanel = document.getElementById('historyPanel')
+      const historyList = document.getElementById('historyList')      
+
+      let curr = '0'
+      let prev = ''
+      let op = null
+      let justEvaluated = false
+      let memory = 0
+      let history = []
+
+      function refresh(){
+        currDisplay.textContent = curr
+        prevDisplay.textContent = prev ? (prev + (op?(' ' + op):'')) : ''
+      }
+
+      function inputDigit(d){
+        if(justEvaluated){ curr = '0'; justEvaluated=false }
+        if(curr === '0' && d !== '.') curr = d
+        else if(d === '.' && curr.includes('.')) return
+        else curr += d
+        refresh()
+      }
+
+      function setOperator(nextOp){
+        if(op && !justEvaluated){ compute() }
+        prev = curr
+        curr = '0'
+        op = nextOp
+        justEvaluated = false
+        refresh()
+      }
+
+      function compute(){
+        if(!op || prev === '') return
+        const a = parseFloat(prev)
+        const b = parseFloat(curr)
+        let result = 0
+        switch(op){
+          case '+': result = a + b; break
+          case '-': result = a - b; break
+          case '×': result = a * b; break
+          case '÷': result = b === 0 ? NaN : a / b; break
+        }
+        const expr = `${a} ${op} ${b} = ${result}`
+        addToHistory(expr)
+        curr = String(Number.isFinite(result) ? +result.toPrecision(15) : 'Error')
+        prev = ''
+        op = null
+        justEvaluated = true
+        refresh()
+      }
+
+      function percent(){
+        // If there's a previous value and an operator, treat as: a op (a * b/100)
+        let x = parseFloat(curr)
+        if(prev && op){
+          let a = parseFloat(prev)
+          x = (a * x) / 100
+        } else {
+          x = x / 100
+        }
+        curr = String(+x.toPrecision(15))
+        refresh()
+      }
+
+      function sqrt(){
+        let x = parseFloat(curr)
+        if(x < 0){ curr='Error'; refresh(); return }
+        curr = String(+Math.sqrt(x).toPrecision(15))
+        justEvaluated = true
+        refresh()
+      }
+
+      function square(){
+        let x = parseFloat(curr)
+        curr = String(+(x*x).toPrecision(15))
+        justEvaluated = true
+        refresh()
+      }
+
+      function inverse(){
+        let x = parseFloat(curr)
+        if(x === 0){ curr='Error'; refresh(); return }
+        curr = String(+(1/x).toPrecision(15))
+        justEvaluated = true
+        refresh()
+      }
+
+      function clearEntry(){ curr = '0'; refresh() }
+      function clearAll(){ curr='0'; prev=''; op=null; refresh() }
+      function backspace(){
+        if(justEvaluated){ curr='0'; justEvaluated=false; refresh(); return }
+        if(curr.length <= 1){ curr='0' } else { curr = curr.slice(0,-1) }
+        refresh()
+      }
+
+      function addToHistory(expr){
+        history.unshift(expr)
+        const div = document.createElement('div')
+        div.className = 'history-item'
+        div.textContent = expr
+        historyList.prepend(div)
+      }
+
+      // MEMORY
+      function memoryAction(action){
+        const val = parseFloat(curr)
+        switch(action){
+          case 'mc': memory = 0; break
+          case 'mr': curr = String(memory); refresh(); break
+          case 'mplus': memory += val; break
+          case 'mminus': memory -= val; break
+          case 'ms': memory = val; break
+          case 'mtoggle': alert('Giá trị bộ nhớ: ' + memory)
+        }
+        updateMemoryPanel()
+      }
+      // button handling
+      document.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const num = b.getAttribute('data-num')
+          const action = b.getAttribute('data-action')
+          if(num != null) { inputDigit(num); return }
+          switch(action){
+            case 'dot': inputDigit('.'); break
+            case 'add': setOperator('+'); break
+            case 'subtract': setOperator('-'); break
+            case 'multiply': setOperator('×'); break
+            case 'divide': setOperator('÷'); break
+            case 'equals': compute(); break
+            case 'percent': percent(); break
+            case 'sqrt': sqrt(); break
+            case 'square':square(); break
+            case 'inverse': inverse(); break
+            case 'clear-entry': clearEntry(); break
+            case 'clear-all': clearAll(); break
+            case 'backspace': backspace(); break
+            case 'history': historyPanel.style.display = 
+                historyPanel.style.display === 'none' ? 'block' : 'none'; break
+            case 'mc': case 'mr': case 'mplus': case 'mminus': case 'ms': case 'mtoggle':
+            memoryAction(action)
+            // === PANEL SWITCHING ===
+            const tabHistory = document.getElementById('tabHistory')
+            const tabMemory = document.getElementById('tabMemory')
+            const historyTab = document.getElementById('historyTab')
+            const memoryTab = document.getElementById('memoryTab')
+            const memoryValue = document.getElementById('memoryValue')
+            const memoryList = document.getElementById('memoryList')
+
+            tabHistory.addEventListener('click', () => {
+              tabHistory.classList.add('active')
+              tabMemory.classList.remove('active')
+              historyTab.classList.remove('hidden')
+              memoryTab.classList.add('hidden')
+            })
+
+            tabMemory.addEventListener('click', () => {
+              tabMemory.classList.add('active')
+              tabHistory.classList.remove('active')
+              memoryTab.classList.remove('hidden')
+              historyTab.classList.add('hidden')
+            })
+
+            // Cập nhật bộ nhớ hiển thị
+            function updateMemoryPanel() {
+              memoryValue.textContent = memory
+              const div = document.createElement('div')
+              div.className = 'memory-item'
+              div.textContent = `Đã lưu: ${memory}`
+              memoryList.prepend(div)
+            }
+; break          }
+        })
+      })
+
+      // keyboard support
+      window.addEventListener('keydown', (e)=>{
+        if(e.key >= '0' && e.key <= '9'){ e.preventDefault(); inputDigit(e.key); return }
+        if(e.key === '.') { e.preventDefault(); inputDigit('.'); return }
+        if(e.key === 'Enter' || e.key === '='){ e.preventDefault(); compute(); return }
+        if(e.key === 'Backspace'){ e.preventDefault(); backspace(); return }
+        if(e.key === 'Delete'){ e.preventDefault(); clearEntry(); return }
+        if(e.key === '%'){ e.preventDefault(); percent(); return }
+        if(e.key === 's' || e.key === 'S'){ e.preventDefault(); sqrt(); return }
+        if(e.key === 'n' || e.key === 'N'){ e.preventDefault(); negate(); return }
+        if(['+','-','*','/'].includes(e.key)){
+          e.preventDefault();
+          if(e.key === '+') setOperator('+')
+          if(e.key === '-') setOperator('-')
+          if(e.key === '*') setOperator('×')
+          if(e.key === '/') setOperator('÷')
+        }
+      })
+
+      // initialize
+      refresh()
+    })();
+  </script>
+</body>
+</html>
