@@ -210,7 +210,7 @@
       function memoryAction(action){
         const val = parseFloat(curr)
         switch(action){
-          case 'mc': memory = 0; break
+          case 'mc': memory = 0; memoryList.innerHTML = ''; break
           case 'mr': curr = String(memory); refresh(); break
           case 'mplus': memory += val; break
           case 'mminus': memory -= val; break
@@ -243,9 +243,9 @@
           switch(action){
             case 'dot': inputDigit('.'); break
             case 'add': setOperator('+'); break
-            case 'subtract': setOperator('−'); break
-            case 'multiply': setOperator('×'); break
-            case 'divide': setOperator('÷'); break
+            case 'subtract': setOperator('-'); break
+            case 'multiply': setOperator('*'); break
+            case 'divide': setOperator('/'); break
             case 'equals': compute(); break
             case 'percent': percent(); break
             case 'sqrt': sqrt(); break
@@ -275,9 +275,9 @@
         if(['+','-','*','/'].includes(e.key)){
           e.preventDefault();
           if(e.key === '+') setOperator('+')
-          if(e.key === '-') setOperator('−')
-          if(e.key === '*') setOperator('×')
-          if(e.key === '/') setOperator('÷')
+          if(e.key === '-') setOperator('-')
+          if(e.key === '*') setOperator('*')
+          if(e.key === '/') setOperator('/')
         }
       })
 
