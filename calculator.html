@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <button class="panel-toggle" id="panelToggle">☰</button>
   <div class="container">
     <div class="calculator" role="application" aria-label="Máy tính">
       <div class="display" aria-live="polite">
@@ -31,17 +32,17 @@
       <button class="muted" data-action="inverse">1/x</button>
       <button class="muted" data-action="square">x²</button>
       <button class="muted" data-action="sqrt">√x</button>
-      <button class="op" data-action="divide">÷</button>
+      <button class="op" data-action="divide">/</button>
 
       <button data-num="7">7</button>
       <button data-num="8">8</button>
       <button data-num="9">9</button>      
-      <button class="op" data-action="multiply">×</button>
+      <button class="op" data-action="multiply">*</button>
 
       <button data-num="4">4</button>
       <button data-num="5">5</button>
       <button data-num="6">6</button>
-      <button class="op" data-action="subtract">−</button>
+      <button class="op" data-action="subtract">-</button>
 
       <button data-num="1">1</button>
       <button data-num="2">2</button>
@@ -62,7 +63,10 @@
       <button id="tabMemory">Bộ nhớ</button>
     </div>
     <div class="panel-content" id="historyTab">
-      <h3>Lịch sử</h3>
+      <div class="panel-header">
+        <h3>Lịch sử</h3>
+        <button class="clear-history-btn" id="clearHistory">Xóa</button>
+      </div>
       <div id="historyList"></div>
     </div>
     <div class="panel-content hidden" id="memoryTab">
@@ -119,8 +123,8 @@
         switch(op){
           case '+': result = a + b; break
           case '-': result = a - b; break
-          case '×': result = a * b; break
-          case '÷': result = b === 0 ? NaN : a / b; break
+          case '*': result = a * b; break
+          case '/': result = b === 0 ? NaN : a / b; break
         }
         const expr = `${a} ${op} ${b} = ${result}`
         addToHistory(expr)
@@ -183,7 +187,27 @@
         historyList.prepend(div)
       }
 
+      function clearHistory() {
+        history = []
+        historyList.innerHTML = ''
+      }
+
       // MEMORY
+      const tabHistory = document.getElementById('tabHistory')
+      const tabMemory = document.getElementById('tabMemory')
+      const historyTab = document.getElementById('historyTab')
+      const memoryTab = document.getElementById('memoryTab')
+      const memoryValue = document.getElementById('memoryValue')
+      const memoryList = document.getElementById('memoryList')
+
+      function updateMemoryPanel() {
+        memoryValue.textContent = memory
+        const div = document.createElement('div')
+        div.className = 'memory-item'
+        div.textContent = `Đã lưu: ${memory}`
+        memoryList.prepend(div)
+      }
+
       function memoryAction(action){
         const val = parseFloat(curr)
         switch(action){
@@ -196,6 +220,22 @@
         }
         updateMemoryPanel()
       }
+
+      // Panel switching
+      tabHistory.addEventListener('click', () => {
+        tabHistory.classList.add('active')
+        tabMemory.classList.remove('active')
+        historyTab.classList.remove('hidden')
+        memoryTab.classList.add('hidden')
+      })
+
+      tabMemory.addEventListener('click', () => {
+        tabMemory.classList.add('active')
+        tabHistory.classList.remove('active')
+        memoryTab.classList.remove('hidden')
+        historyTab.classList.add('hidden')
+      })
+
       // button handling
       document.querySelectorAll('button').forEach(b=>{
         b.addEventListener('click', ()=>{
@@ -205,7 +245,7 @@
           switch(action){
             case 'dot': inputDigit('.'); break
             case 'add': setOperator('+'); break
-            case 'subtract': setOperator('-'); break
+            case 'subtract': setOperator('−'); break
             case 'multiply': setOperator('×'); break
             case 'divide': setOperator('÷'); break
             case 'equals': compute(); break
@@ -219,38 +259,8 @@
             case 'history': historyPanel.style.display = 
                 historyPanel.style.display === 'none' ? 'block' : 'none'; break
             case 'mc': case 'mr': case 'mplus': case 'mminus': case 'ms': case 'mtoggle':
-            memoryAction(action)
-            // === PANEL SWITCHING ===
-            const tabHistory = document.getElementById('tabHistory')
-            const tabMemory = document.getElementById('tabMemory')
-            const historyTab = document.getElementById('historyTab')
-            const memoryTab = document.getElementById('memoryTab')
-            const memoryValue = document.getElementById('memoryValue')
-            const memoryList = document.getElementById('memoryList')
-
-            tabHistory.addEventListener('click', () => {
-              tabHistory.classList.add('active')
-              tabMemory.classList.remove('active')
-              historyTab.classList.remove('hidden')
-              memoryTab.classList.add('hidden')
-            })
-
-            tabMemory.addEventListener('click', () => {
-              tabMemory.classList.add('active')
-              tabHistory.classList.remove('active')
-              memoryTab.classList.remove('hidden')
-              historyTab.classList.add('hidden')
-            })
-
-            // Cập nhật bộ nhớ hiển thị
-            function updateMemoryPanel() {
-              memoryValue.textContent = memory
-              const div = document.createElement('div')
-              div.className = 'memory-item'
-              div.textContent = `Đã lưu: ${memory}`
-              memoryList.prepend(div)
-            }
-; break          }
+              memoryAction(action); break
+          }
         })
       })
 
@@ -267,7 +277,7 @@
         if(['+','-','*','/'].includes(e.key)){
           e.preventDefault();
           if(e.key === '+') setOperator('+')
-          if(e.key === '-') setOperator('-')
+          if(e.key === '-') setOperator('−')
           if(e.key === '*') setOperator('×')
           if(e.key === '/') setOperator('÷')
         }
@@ -275,6 +285,31 @@
 
       // initialize
       refresh()
+
+      // Toggle panel cho mobile
+      const panelToggle = document.getElementById('panelToggle')
+      const sidePanel = document.getElementById('sidePanel')
+      const clearHistoryBtn = document.getElementById('clearHistory')
+      
+      panelToggle.addEventListener('click', () => {
+        sidePanel.classList.toggle('show')
+        panelToggle.classList.toggle('hidden')
+      })
+
+      clearHistoryBtn.addEventListener('click', () => {
+        clearHistory()
+      })
+
+      // Đóng panel khi click bên ngoài (mobile)
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && 
+            !sidePanel.contains(e.target) && 
+            !panelToggle.contains(e.target) &&
+            sidePanel.classList.contains('show')) {
+          sidePanel.classList.remove('show')
+          panelToggle.classList.remove('hidden')
+        }
+      })
     })();
   </script>
 </body>
